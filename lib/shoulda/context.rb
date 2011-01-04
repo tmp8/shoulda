@@ -371,7 +371,7 @@ module Shoulda
       }
     end
 
-    def create_test_from_should_hash(should)
+    def create_test_from_should_hash(klass, should)
       test_name = ["test:", full_name, "should", "#{should[:name]}. "].flatten.join(' ').to_sym
 
       if test_methods[test_unit_class][test_name.to_s] then
@@ -381,7 +381,8 @@ module Shoulda
       test_methods[test_unit_class][test_name.to_s] = true
 
       context = self
-      test_unit_class.send(:define_method, test_name) do
+      
+      klass.send(:define_method, test_name) do
         @shoulda_context = context
         begin
           context.run_parent_setup_blocks(self)
@@ -423,9 +424,15 @@ module Shoulda
       end
     end
 
+    def class_for_test
+      test_unit_class
+    end
+
     def build
+      klass = class_for_test
+      
       shoulds.each do |should|
-        create_test_from_should_hash(should)
+        create_test_from_should_hash(klass, should)
       end
 
       subcontexts.each { |context| context.build }
@@ -436,6 +443,5 @@ module Shoulda
     def method_missing(method, *args, &blk)
       test_unit_class.send(method, *args, &blk)
     end
-
   end
 end
